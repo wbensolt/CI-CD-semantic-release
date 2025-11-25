@@ -19,7 +19,7 @@ jobs:
       - name: Install uv
         run: pip install "uv>=0.7.19"
       - name: Sync dependencies
-        run: uv sync
+        run: uv sync --all-groups
       - name: Ruff lint
         run: uv run ruff check .
       - name: Ruff format check
