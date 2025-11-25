@@ -7,77 +7,57 @@ on:
     branches: [main, develop]
 
 jobs:
+
   lint:
-    name: Lint & Format
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
-      - name: Install Python 3.13
+      - uses: actions/checkout@v4
+      - name: Setup Python
         uses: actions/setup-python@v4
         with:
           python-version: "3.13"
-
-      - name: Install UV
-        run: pip install "astral-uv>=0.13.4"
-
-      - name: Install dependencies
+      - name: Install uv
+        run: pip install "uv>=0.7.19"
+      - name: Sync dependencies
         run: uv sync
-
-      - name: Ruff check
+      - name: Ruff lint
         run: uv run ruff check .
-
       - name: Ruff format check
         run: uv run ruff format --check .
 
   typecheck:
-    name: Type Check
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
-      - name: Install Python 3.13
+      - uses: actions/checkout@v4
+      - name: Setup Python
         uses: actions/setup-python@v4
         with:
           python-version: "3.13"
-
-      - name: Install UV
-        run: pip install "astral-uv>=0.13.4"
-
-      - name: Install dependencies
+      - name: Install uv
+        run: pip install "uv>=0.7.19"
+      - name: Sync dependencies
         run: uv sync
-
-      - name: Run Mypy
+      - name: Run mypy
         run: uv run mypy app/
 
   security:
-    name: Security Scan
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
-      - name: Install Python 3.13
+      - uses: actions/checkout@v4
+      - name: Setup Python
         uses: actions/setup-python@v4
         with:
           python-version: "3.13"
-
-      - name: Install UV
-        run: pip install "astral-uv>=0.13.4"
-
-      - name: Install dependencies
+      - name: Install uv
+        run: pip install "uv>=0.7.19"
+      - name: Sync dependencies
         run: uv sync
-
-      - name: Run Bandit
+      - name: Bandit scan
         run: uv run bandit -r app/
-
-      - name: Run Safety
+      - name: Safety check
         run: uv run safety check
 
   tests:
-    name: Run Tests
     runs-on: ubuntu-latest
     services:
       postgres:
@@ -92,29 +72,15 @@ jobs:
           --health-retries 5
         ports:
           - 5432:5432
-
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
-      - name: Install Python 3.13
+      - uses: actions/checkout@v4
+      - name: Setup Python
         uses: actions/setup-python@v4
         with:
           python-version: "3.13"
-
-      - name: Install UV
-        run: pip install "astral-uv>=0.13.4"
-
-      - name: Install dependencies
+      - name: Install uv
+        run: pip install "uv>=0.7.19"
+      - name: Sync dependencies
         run: uv sync
-
       - name: Run tests with coverage
         run: uv run pytest --cov=app --cov-report=term --cov-report=xml
-
-      # Optionnel : Upload coverage to Codecov
-      - name: Upload coverage to Codecov
-        if: success()
-        uses: codecov/codecov-action@v4
-        with:
-          files: ./coverage.xml
-          fail_ci_if_error: true
