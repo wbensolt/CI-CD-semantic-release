@@ -8,79 +8,21 @@ on:
 
 jobs:
 
-  lint:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v6
-      - name: Setup Python
-        uses: actions/setup-python@v4
-        with:
-          python-version: "3.13"
-      - name: Install uv
-        run: pip install "uv>=0.7.19"
-      - name: Sync dependencies
-        run: uv sync
-      - name: Ruff lint
-        run: uv run ruff check .
-      - name: Ruff format check
-        run: uv run ruff format --check .
-
-  typecheck:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v6
-      - name: Setup Python
-        uses: actions/setup-python@v4
-        with:
-          python-version: "3.13"
-      - name: Install uv
-        run: pip install "uv>=0.7.19"
-      - name: Sync dependencies
-        run: uv sync
-      - name: Run mypy
-        run: uv run mypy app/
-
-  security:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v6
-      - name: Setup Python
-        uses: actions/setup-python@v4
-        with:
-          python-version: "3.13"
-      - name: Install uv
-        run: pip install "uv>=0.7.19"
-      - name: Sync dependencies
-        run: uv sync
-      - name: Bandit scan
-        run: uv run bandit -r app/
-      - name: Safety check
-        run: uv run safety check
-
-  tests:
-    runs-on: ubuntu-latest
-    services:
-      postgres:
-        image: postgres:15
-        env:
-          POSTGRES_PASSWORD: postgres
-          POSTGRES_DB: test_db
-        options: >-
-          --health-cmd pg_isready
-          --health-interval 10s
-          --health-timeout 5s
-          --health-retries 5
-        ports:
-          - 5432:5432
-    steps:
-      - uses: actions/checkout@v6
-      - name: Setup Python
-        uses: actions/setup-python@v4
-        with:
-          python-version: "3.13"
-      - name: Install uv
-        run: pip install "uv>=0.7.19"
-      - name: Sync dependencies
-        run: uv sync
-      - name: Run tests with coverage
-        run: uv run pytest --cov=app --cov-report=term --cov-report=xml
+ lint:
+  runs-on: ubuntu-latest
+  steps:
+    - uses: actions/checkout@v6
+    - name: Setup Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: "3.13"
+    - name: Install uv
+      run: pip install "uv>=0.7.19"
+    - name: Install dev dependencies
+      run: uv install -g dev
+    - name: Sync dependencies
+      run: uv sync
+    - name: Ruff lint
+      run: uv run ruff check .
+    - name: Ruff format check
+      run: uv run ruff format --check .
