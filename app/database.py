@@ -6,11 +6,9 @@ et fournit une fonction générateur pour obtenir des sessions de base de donné
 
 from sqlmodel import create_engine, Session
 import os
-import sys
-from typing import Generator
 
 DATABASE_URL = os.getenv(
-    "DATABASE_URL", "postgresql://postgres:postgres@localhost:5432/items_db"
+    "DATABASE_URL", "postgresql://postgres:postgres@localhost:5433/items_db"
 )
 
 POOL_SIZE = 10
