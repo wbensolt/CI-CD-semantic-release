@@ -12,7 +12,7 @@ DEBUG_MODE = True
 
 @asynccontextmanager
 async def lifespan(app: FastAPI) -> AsyncGenerator[None]:
-    """Initialisation et fermeture."""
+    """Initialisation et fermeture"""
     if DEBUG_MODE:
         SQLModel.metadata.create_all(engine)
     yield
