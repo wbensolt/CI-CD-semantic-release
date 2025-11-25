@@ -1,5 +1,5 @@
+
 from sqlmodel import Session, select
-from collections.abc import Sequence
 
 from app.models.item import Item
 from app.schemas.item import ItemCreate, ItemUpdate

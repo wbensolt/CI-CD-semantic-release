@@ -38,7 +38,10 @@ select = [
     "C4", # flake8-comprehensions
     "UP", # pyupgrade
 ]
-ignore = ["D203", "D213"] # Ignorer certains docstring warnings
+ignore = [
+    "B008",  # Do not perform function call in argument defaults (FastAPI pattern)
+    "D203", "D213"  # Docstring warnings
+]
 
 [tool.ruff.format]
 quote-style = "double"

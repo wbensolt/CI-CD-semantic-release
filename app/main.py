@@ -1,5 +1,5 @@
-from contextlib import asynccontextmanager
 from collections.abc import AsyncGenerator
+from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
 from sqlmodel import SQLModel
@@ -11,7 +11,7 @@ DEBUG_MODE = True
 
 
 @asynccontextmanager
-async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
+async def lifespan(app: FastAPI) -> AsyncGenerator[None]:
     """Initialisation et fermeture."""
     if DEBUG_MODE:
         SQLModel.metadata.create_all(engine)
