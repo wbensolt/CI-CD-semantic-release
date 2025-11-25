@@ -81,10 +81,11 @@ jobs:
       postgres:
         image: postgres:15
         env:
-          POSTGRES_PASSWORD: postgres
-          POSTGRES_DB: test_db
+          POSTGRES_USER: ${{ secrets.POSTGRES_USER }}
+          POSTGRES_PASSWORD: ${{ secrets.POSTGRES_PASSWORD }}
+          POSTGRES_DB: ${{ secrets.POSTGRES_DB }}
         options: >-
-          --health-cmd pg_isready
+          --health-cmd pg_isready -U ${{ secrets.POSTGRES_USER }}
           --health-interval 10s
           --health-timeout 5s
           --health-retries 5
@@ -104,7 +105,7 @@ jobs:
 
       - name: Run tests with coverage
         env:
-          DATABASE_URL: postgresql://postgres:postgres@localhost:5432/test_db
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
           PYTHONPATH: ${{ github.workspace }}
         run: |
           uv run pytest --cov=app --cov-report=term --cov-report=xml

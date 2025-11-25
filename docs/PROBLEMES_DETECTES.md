@@ -131,4 +131,3 @@ Semantic Release gère automatiquement :
 💡 **Avec Ruff + pydocstyle + Mypy + Bandit + Pytest + Semantic Release → tu obtiens un pipeline complet, maintenable et sécurisé.**
 
 ---
-

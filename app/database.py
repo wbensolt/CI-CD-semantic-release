@@ -1,16 +1,17 @@
-"""Configuration de la base de données et gestion des sessions."""
-
 import os
 from collections.abc import Generator
 
+from dotenv import load_dotenv
 from sqlmodel import Session, create_engine
 
-DATABASE_URL = os.getenv(
-    "DATABASE_URL",
-    "postgresql://postgres:postgres@localhost:5433/items_db",
-)
+load_dotenv(".env")
 
-POOL_SIZE = 10
+# Récupérer la base de données depuis les secrets ou variables d'environnement
+DATABASE_URL = os.getenv("DATABASE_URL")
+if not DATABASE_URL:
+    raise RuntimeError("DATABASE_URL must be set in environment variables")
+
+POOL_SIZE = int(os.getenv("POOL_SIZE", 10))
 
 engine = create_engine(DATABASE_URL, pool_size=POOL_SIZE)
 

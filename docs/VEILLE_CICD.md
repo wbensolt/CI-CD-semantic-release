@@ -117,7 +117,7 @@ Comment python-semantic-release fonctionne ?
     - Génération du CHANGELOG:
         PSR lit les commits pour créer le CHANGELOG automatiquement
         Possibilité de filtrer les commits à inclure ou exclure, et de choisir le format (rst ou md)
-        
+
         Exemple :
             [tool.semantic_release.changelog.default_templates]
             changelog_file = "docs/CHANGELOG.rst"
@@ -250,4 +250,3 @@ S’intègre en Markdown via :
 ```
 
 ---
-

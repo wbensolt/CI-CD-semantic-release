@@ -98,4 +98,3 @@ Ce document présente un **tableau comparatif** + **les explications complètes*
 | **Type Checker** | Pyright          | Ultra rapide, excellent dans VS Code |
 | **Tests**        | pytest           | Flexible et standard moderne         |
 | **Sécurité**     | Bandit           | Simple et efficace pour Python       |
-
