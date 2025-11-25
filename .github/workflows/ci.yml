@@ -17,11 +17,11 @@ jobs:
         with:
           python-version: "3.13"
       - name: Install uv
-        run: pip install "uv>=0.7.19"
+        run: curl -LsSf https://astral.sh/uv/install.sh | sh
+      - name: Add uv to PATH
+        run: echo "$HOME/.cargo/bin" >> $GITHUB_PATH
       - name: Sync dependencies
         run: uv sync --all-groups
-      - name: Verify ruff installed
-        run: .venv/bin/python -m pip list | grep ruff
       - name: Ruff lint
         run: uv run ruff check .
       - name: Ruff format check
