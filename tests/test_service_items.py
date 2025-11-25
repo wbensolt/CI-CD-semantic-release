@@ -1,12 +1,8 @@
 import pytest
 from sqlmodel import SQLModel, Session, create_engine
-
 from app.schemas.item import ItemCreate, ItemUpdate
 from app.services.item_service import ItemService
 
-# ------------------------------
-# Fixture pour la base de test
-# ------------------------------
 @pytest.fixture
 def engine():
     engine = create_engine("sqlite:///:memory:")
@@ -19,16 +15,10 @@ def session(engine):
     with Session(engine) as session:
         yield session
 
-# ------------------------------
-# Fixture pour les données d'un item
-# ------------------------------
 @pytest.fixture
 def sample_item_data():
     return ItemCreate(nom="Test Item", prix=10.0)
 
-# ------------------------------
-# Tests CRUD
-# ------------------------------
 def test_create_item(session, sample_item_data):
     item = ItemService.create(session, sample_item_data)
     assert item.nom == sample_item_data.nom
@@ -48,9 +38,10 @@ def test_get_by_id(session, sample_item_data):
 
 def test_update_item(session, sample_item_data):
     item = ItemService.create(session, sample_item_data)
-    update_data = ItemUpdate(description="Updated description")
+    update_data = ItemUpdate(nom="Updated Name", prix=20.0)
     updated_item = ItemService.update(session, item.id, update_data)
-    assert updated_item.description == "Updated description"
+    assert updated_item.nom == "Updated Name"
+    assert updated_item.prix == 20.0
 
 def test_delete_item(session, sample_item_data):
     item = ItemService.create(session, sample_item_data)
