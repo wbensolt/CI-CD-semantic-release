@@ -1,10 +1,6 @@
 from contextlib import asynccontextmanager
-import os
-import sys
 from fastapi import FastAPI
 from sqlmodel import SQLModel
-import json
-from typing import Dict, Any
 from app.database import engine
 from app.routes import items_router
 
