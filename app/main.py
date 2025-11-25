@@ -1,5 +1,5 @@
 from contextlib import asynccontextmanager
-from typing import AsyncGenerator, Dict
+from collections.abc import AsyncGenerator
 
 from fastapi import FastAPI
 from sqlmodel import SQLModel
@@ -19,10 +19,9 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
 
 
 app: FastAPI = FastAPI(lifespan=lifespan)
-
 app.include_router(items_router)
 
 
 @app.get("/")
-def root() -> Dict[str, str]:
+def root() -> dict[str, str]:
     return {"message": "API opérationnelle"}

@@ -1,5 +1,5 @@
 from sqlmodel import Session, select
-from typing import List, Optional
+from collections.abc import Sequence
 
 from app.models.item import Item
 from app.schemas.item import ItemCreate, ItemUpdate
@@ -8,12 +8,11 @@ from app.schemas.item import ItemCreate, ItemUpdate
 class ItemService:
 
     @staticmethod
-    def get_all(db: Session, skip: int, limit: int) -> List[Item]:
-        # Convertir en list pour correspondre au type List[Item]
+    def get_all(db: Session, skip: int, limit: int) -> list[Item]:
         return list(db.exec(select(Item).offset(skip).limit(limit)).all())
 
     @staticmethod
-    def get_by_id(db: Session, item_id: int) -> Optional[Item]:
+    def get_by_id(db: Session, item_id: int) -> Item | None:
         return db.get(Item, item_id)
 
     @staticmethod
@@ -25,7 +24,7 @@ class ItemService:
         return item
 
     @staticmethod
-    def update(db: Session, item_id: int, item_data: ItemUpdate) -> Optional[Item]:
+    def update(db: Session, item_id: int, item_data: ItemUpdate) -> Item | None:
         item = db.get(Item, item_id)
         if not item:
             return None

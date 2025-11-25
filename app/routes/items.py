@@ -1,6 +1,5 @@
 from fastapi import APIRouter, Body, Depends, HTTPException, status
 from sqlmodel import Session
-from typing import List
 
 from app.database import get_db
 from app.schemas.item import ItemCreate, ItemResponse, ItemUpdate
@@ -9,13 +8,12 @@ from app.services.item_service import ItemService
 router = APIRouter(prefix="/items", tags=["items"])
 
 
-@router.get("/", response_model=List[ItemResponse])
+@router.get("/", response_model=list[ItemResponse])
 def get_items(
     skip: int = 0,
     limit: int = 100,
     db: Session = Depends(get_db),
-) -> List[ItemResponse]:
-    """Récupère la liste des items avec pagination."""
+) -> list[ItemResponse]:
     items = ItemService.get_all(db, skip, limit)
     return [ItemResponse.model_validate(item) for item in items]
 
@@ -36,9 +34,7 @@ def create_item(
     item_data: ItemCreate = Body(...),
     db: Session = Depends(get_db),
 ) -> ItemResponse:
-    """Créer un nouvel item."""
-    item = ItemService.create(db, item_data)
-    return ItemResponse.model_validate(item)
+    return ItemResponse.model_validate(ItemService.create(db, item_data))
 
 
 @router.put("/{item_id}", response_model=ItemResponse)
