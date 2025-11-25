@@ -8,22 +8,107 @@ on:
 
 jobs:
 
+  # -----------------------------------------------------------
+  # Job 1 : Lint & Format (Ruff)
+  # -----------------------------------------------------------
   lint:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v4
+
       - name: Install uv
         uses: astral-sh/setup-uv@v3
         with:
           version: "latest"
-      - name: Set up Python
-        uses: actions/setup-python@v5
-        with:
-          python-version: "3.13"
-      - name: Install ruff with uv tool
-        run: uv tool install ruff
+
+      - name: Install dependencies
+        run: uv sync
+
       - name: Ruff lint
-        run: ruff check .
+        run: uv run ruff check .
+
       - name: Ruff format check
-        run: ruff format --check .
-        
+        run: uv run ruff format --check .
+
+  # -----------------------------------------------------------
+  # Job 2 : Type Check (mypy)
+  # -----------------------------------------------------------
+  typecheck:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v3
+        with:
+          version: "latest"
+
+      - name: Install dependencies
+        run: uv sync
+
+      - name: Run mypy
+        run: uv run mypy app/
+
+  # -----------------------------------------------------------
+  # Job 3 : Security Scan (bandit + safety)
+  # -----------------------------------------------------------
+  security:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v3
+        with:
+          version: "latest"
+
+      - name: Install dependencies
+        run: uv sync
+
+      - name: Bandit security scan
+        run: uv run bandit -r app/
+
+      - name: Safety dependency scan
+        run: uv run safety check
+
+  # -----------------------------------------------------------
+  # Job 4 : Tests + Coverage + PostgreSQL
+  # -----------------------------------------------------------
+  tests:
+    runs-on: ubuntu-latest
+
+    services:
+      postgres:
+        image: postgres:15
+        env:
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: test_db
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 5432:5432
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v3
+        with:
+          version: "latest"
+
+      - name: Install dependencies
+        run: uv sync
+
+      - name: Run tests with coverage
+        env:
+          DATABASE_URL: postgresql://postgres:postgres@localhost:5432/test_db
+        run: |
+          uv run pytest --cov=app --cov-report=term --cov-report=xml
+
+      # Optionnel : Upload vers Codecov
+      - name: Upload coverage to codecov
+        uses: codecov/codecov-action@v4
+        if: success()
