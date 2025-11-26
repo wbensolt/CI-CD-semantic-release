@@ -2,6 +2,10 @@
 
 <!-- version list -->
 
+## v1.0.0-rc.1 (2025-11-26)
+
+- Initial Release
+
 ## Unreleased
 
 ### Bug Fixes
