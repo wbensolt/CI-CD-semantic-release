@@ -1,140 +1,144 @@
-# Nom du workflow qui apparaît dans l'interface GitHub Actions
+# Nom du workflow
 name: Release
 
-# Définit quand ce workflow doit s'exécuter
 on:
-    push:
-        branches:
-            - main
-            - develop
+  push:
+    branches:
+      - main
+      - develop
 
-# Permissions par défaut pour tous les jobs du workflow
 permissions:
-    contents: write      # CHANGÉ: read → write (permet de créer des commits, tags)
-    packages: write
+  contents: read
+  packages: write
 
 jobs:
-    release:
-        name: Release
-        runs-on: ubuntu-latest
-        concurrency: release-${{ github.ref }}
-        permissions:
-            id-token: write
-            contents: write      # ASSURÉ: write permissions
-            packages: write
-        outputs:
-            version: ${{ steps.get_version.outputs.version }}
-        steps:
-            - name: Generate App Token
-              id: get_token
-              uses: actions/create-github-app-token@v2
-              with:
-                app-id: ${{ secrets.APP_ID }}
-                private-key: ${{ secrets.PRIVATE_KEY }}
+  release:
+    name: Release
+    runs-on: ubuntu-latest
+    concurrency: release-${{ github.ref }}
+    permissions:
+      id-token: write
+      contents: write
+      packages: write
+    outputs:
+      version: ${{ steps.get_version.outputs.version }}
+    steps:
+      # Étape 1: Générer un token à partir de la nouvelle GitHub App
+      - name: Generate App Token
+        id: get_token
+        uses: actions/create-github-app-token@v2
+        with:
+          app-id: ${{ secrets.APP_ID }}           # ID de berryWIP-bot2
+          private-key: ${{ secrets.PRIVATE_KEY }} # Clé privée de berryWIP-bot2
 
-            - name: Checkout
-              uses: actions/checkout@v5.0.0
-              with:
-                token: ${{ steps.get_token.outputs.token }}
-                fetch-depth: 0
+      # Étape 2: Checkout du repo avec le token App
+      - name: Checkout
+        uses: actions/checkout@v5.0.0
+        with:
+          token: ${{ steps.get_token.outputs.token }}
+          fetch-depth: 0
 
-            - name: Checkout branch
-              run: |
-                BRANCH_NAME="${GITHUB_REF#refs/heads/}"
-                echo "Checking out branch: $BRANCH_NAME"
-                git checkout "$BRANCH_NAME"
+      - name: Checkout branch
+        run: |
+          BRANCH_NAME="${GITHUB_REF#refs/heads/}"
+          echo "Checking out branch: $BRANCH_NAME"
+          git checkout "$BRANCH_NAME"
 
-            - name: astral-sh/setup-uv
-              uses: astral-sh/setup-uv@v7.1.2
-              with:
-                version: "latest"
+      # Étape 3: Installer uv
+      - name: astral-sh/setup-uv
+        uses: astral-sh/setup-uv@v7.1.2
+        with:
+          version: "latest"
 
-            - name: Install Python Semantic Release
-              run: uv tool install python-semantic-release
+      # Étape 4: Installer Python Semantic Release
+      - name: Install Python Semantic Release
+        run: uv tool install python-semantic-release
 
-            - name: Semantic Versioning
-              id: semantic
-              env:
-                GITHUB_TOKEN: ${{ secrets.BOT_PAT }}
-                GH_TOKEN: ${{ secrets.BOT_PAT }}
-              run: |
-                git config user.name "berryWIP-bot[bot]"
-                git config user.email "berryWIP-bot[bot]@users.noreply.github.com"
+      # Étape 5: Versionning et release
+      - name: Semantic Versioning
+        id: semantic
+        env:
+          GITHUB_TOKEN: ${{ steps.get_token.outputs.token }}
+          GH_TOKEN: ${{ steps.get_token.outputs.token }}
+        run: |
+          git config user.name "berryWIP-bot2[bot]"
+          git config user.email "berryWIP-bot2[bot]@users.noreply.github.com"
 
-                uv run semantic-release version --changelog
+          uv run semantic-release version --changelog
 
-                if [ "${{ github.ref }}" == "refs/heads/main" ]; then
-                  echo "📦 Creating GitHub Release (main branch)"
-                  uv run semantic-release publish
-                else
-                  echo "⏭️ Skipping GitHub Release (develop branch - pre-release only)"
-                  git push --follow-tags origin HEAD
-                fi
+          if [ "${{ github.ref }}" == "refs/heads/main" ]; then
+            echo "📦 Creating GitHub Release (main branch)"
+            uv run semantic-release publish
+          else
+            echo "⏭️ Skipping GitHub Release (develop branch - pre-release only)"
+            git push --follow-tags origin HEAD
+          fi
 
-            - name: Get Version
-              id: get_version
-              run: |
-                VERSION=$(git describe --tags --abbrev=0)
-                echo "version=$VERSION" >> $GITHUB_OUTPUT
+      # Étape 6: Récupérer la version créée
+      - name: Get Version
+        id: get_version
+        run: |
+          VERSION=$(git describe --tags --abbrev=0)
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
 
-    build-and-push-docker:
-        name: Build & Push Docker Image
-        runs-on: ubuntu-latest
-        needs: release
-        if: github.ref == 'refs/heads/main'
-        permissions:
-            contents: read
-            packages: write
-        steps:
-            - name: Checkout
-              uses: actions/checkout@v5.0.0
-              with:
-                fetch-depth: 0
+  build-and-push-docker:
+    name: Build & Push Docker Image
+    runs-on: ubuntu-latest
+    needs: release
+    if: github.ref == 'refs/heads/main'
+    permissions:
+      contents: read
+      packages: write
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5.0.0
+        with:
+          fetch-depth: 0
 
-            - name: Login to Docker Hub
-              uses: docker/login-action@v3.6.0
-              with:
-                registry: ghcr.io
-                username: ${{ github.actor }}
-                password: ${{ secrets.GITHUB_TOKEN }}
+      - name: Login to Docker Hub
+        uses: docker/login-action@v3.6.0
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
 
-            - name: Extract metadata
-              id: meta
-              uses: docker/metadata-action@v5
-              with:
-                images: ghcr.io/${{ github.repository }}
-                tags: |
-                  type=raw,value=${{ needs.release.outputs.version }}
-                  type=raw,value=latest
-                labels: |
-                  org.opencontainers.image.version=${{ needs.release.outputs.version }}
-                  org.opencontainers.image.revision=${{ github.sha }}
+      - name: Extract metadata
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ghcr.io/${{ github.repository }}
+          tags: |
+            type=raw,value=${{ needs.release.outputs.version }}
+            type=raw,value=latest
+          labels: |
+            org.opencontainers.image.version=${{ needs.release.outputs.version }}
+            org.opencontainers.image.revision=${{ github.sha }}
 
-            - name: Build Docker image
-              id: docker_build
-              uses: docker/build-push-action@v5
-              with:
-                context: .
-                file: Dockerfile
-                push: false
-                tags: ${{ steps.meta.outputs.tags }}
-                labels: ${{ steps.meta.outputs.labels }}
-                load: true
+      - name: Build Docker image (do not push)
+        id: docker_build
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: Dockerfile
+          push: false
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          load: true
 
-            - name: Scanner l'image avec Trivy
-              uses: aquasecurity/trivy-action@master
-              with:
-                image-ref: ghcr.io/${{ github.repository }}:${{ needs.release.outputs.version }}
-                format: "table"
-                exit-code: "1"
-                ignore-unfixed: true
-                severity: "CRITICAL,HIGH"
+      - name: Scan image with Trivy
+        uses: aquasecurity/trivy-action@master
+        with:
+          image-ref: ghcr.io/${{ github.repository }}:${{ needs.release.outputs.version }}
+          format: "table"
+          exit-code: "1"
+          ignore-unfixed: true
+          severity: "CRITICAL,HIGH"
 
-            - name: Pousser l'image Docker
-              uses: docker/build-push-action@v5
-              with:
-                context: .
-                file: Dockerfile
-                push: true
-                tags: ${{ steps.meta.outputs.tags }}
-                labels: ${{ steps.meta.outputs.labels }}
+      - name: Push Docker image (if scan succeeds)
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: Dockerfile
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
