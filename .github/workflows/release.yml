@@ -55,8 +55,8 @@ jobs:
             - name: Semantic Versioning
               id: semantic
               env:
-                GITHUB_TOKEN: ${{ steps.get_token.outputs.token }}
-                GH_TOKEN: ${{ steps.get_token.outputs.token }}
+                GITHUB_TOKEN: ${{ secrets.BOT_PAT }}
+                GH_TOKEN: ${{ secrets.BOT_PAT }}
               run: |
                 git config user.name "berryWIP-bot[bot]"
                 git config user.email "berryWIP-bot[bot]@users.noreply.github.com"
