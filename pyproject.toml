@@ -70,35 +70,79 @@ python_files = "test_*.py"
 python_functions = "test_*"
 #addopts = "--strict-markers --cov=app --cov-report=term-missing"
 
-# ========================
-# Semantic Release configuration
-# ========================
+# ============================================================================
+# SEMANTIC RELEASE CONFIGURATION
+# ============================================================================
+# Configuration pour python-semantic-release qui gère le versioning automatique
+# basé sur les Conventional Commits (feat, fix, BREAKING CHANGE, etc.)
+
 [tool.semantic_release]
-version_variable = "training_ci_cd_semantic_release.__version__"
-upload_to_git = true
-upload_to_pypi = false
-branch_prefixes = ["main", "develop"]
+# Version actuelle du projet (sera mise à jour automatiquement)
+version_toml = ["pyproject.toml:project.version"]
+major_on_zero = true
+# =============================================================================
+# SEMANTIC RELEASE - CONFIGURATION DES BRANCHES
+# =============================================================================
+# Définit comment chaque branche gère les releases
 
+# BRANCHE MAIN - Versions stables (production)
 [tool.semantic_release.branches.main]
-match = "main"
+match = "main"                    # Nom de la branche à matcher
+prerelease = false                # false = versions stables (1.0.0, 1.1.0, 2.0.0)
+# Exemples de versions créées sur main: 1.0.0, 1.1.0, 1.2.0, 2.0.0
 
+# BRANCHE DEVELOP - Versions de pré-release (RC = Release Candidate)
 [tool.semantic_release.branches.develop]
-match = "develop"
+match = "develop"                 # Nom de la branche à matcher
+prerelease = true
 
 
+# Format des tags Git créés (ex: v1.2.3)
+tag_format = "v{version}"
+
+# Template du message de commit pour le bump de version
+commit_message = "chore(release): bump version to {version}"
+
+# Génère automatiquement un CHANGELOG.md
+build_command = "echo 'No build command needed'"
+
+# Configuration du changelog
 [tool.semantic_release.changelog]
-file = "CHANGELOG.md"
+# Template utilisé pour générer le CHANGELOG
+template_dir = "templates"
+# Exclut certains types de commits du changelog (chore, ci, etc.)
+exclude_commit_patterns = [
+    "^chore(?:\\(.*\\))?:",
+    "^ci(?:\\(.*\\))?:",
+    "^docs(?:\\(.*\\))?:",
+    "^style(?:\\(.*\\))?:",
+    "^test(?:\\(.*\\))?:",
+]
 
+# Configuration des règles de versioning (Conventional Commits)
 [tool.semantic_release.commit_parser_options]
-# On utilise Conventional Commits par défaut
-version_strategy = "semantic"
-conventional_regex = "^(?P<type>feat|fix|perf|refactor|docs|test|chore)(\\((?P<scope>[^)]+)\\))?: (?P<description>.+)$"
-breaking_change_pattern = "BREAKING CHANGE"
+# Types de commits qui déclenchent une nouvelle version
+allowed_tags = [
+    "feat",      # Nouvelle fonctionnalité → MINOR version bump (0.1.0 → 0.2.0)
+    "fix",       # Correction de bug → PATCH version bump (0.1.0 → 0.1.1)
+    "perf",      # Amélioration de performance → PATCH
+    "refactor",  # Refactoring → PATCH
+]
 
+# Types de commits pour le changelog mais qui ne déclenchent pas de version
+minor_tags = ["feat"]
+patch_tags = ["fix", "perf", "refactor"]
+
+# Configuration GitHub Release
 [tool.semantic_release.remote]
-name = "origin"
-# url sera détectée automatiquement
+# Type de remote (github, gitlab, gitea)
+type = "github"
+# Ignore les erreurs de token (utile en développement local)
+ignore_token_for_push = false
 
+# Configuration de publication
 [tool.semantic_release.publish]
-# Configuration pour créer la release GitHub
-release_notes = true
+# Désactive la publication sur PyPI (nous utilisons Docker)
+upload_to_pypi = false
+# Crée une GitHub Release
+upload_to_release = true
