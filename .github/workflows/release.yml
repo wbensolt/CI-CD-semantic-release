@@ -3,128 +3,100 @@ name: Release
 
 # Définit quand ce workflow doit s'exécuter
 on:
-    # S'exécute automatiquement sur push vers main/develop (après merge de PR)
     push:
         branches:
-            - main               # Push sur la branche principale (production)
-            - develop            # Push sur la branche de développement (pre-releases)
+            - main
+            - develop
 
 # Permissions par défaut pour tous les jobs du workflow
 permissions:
-    contents: read      # Lecture du contenu du repository
-    packages: write     # Écriture des packages (pour Docker registry)
+    contents: write      # CHANGÉ: read → write (permet de créer des commits, tags)
+    packages: write
 
-
-# Définit les différentes tâches (jobs) à exécuter
 jobs:
-    # Job pour créer une nouvelle version et publier la release
     release:
         name: Release
-        runs-on: ubuntu-latest    # Utilise la dernière version d'Ubuntu
-        # Empêche plusieurs releases simultanées sur la même branche
+        runs-on: ubuntu-latest
         concurrency: release-${{ github.ref }}
-        # Permissions spécifiques pour ce job (écrasent les permissions globales)
         permissions:
-            id-token: write     # Nécessaire pour l'authentification OIDC
-            contents: write     # Écriture du contenu (créer des tags, commits)
-            packages: write     # Publication de packages
-        # Outputs permettent de partager des données avec d'autres jobs
+            id-token: write
+            contents: write      # ASSURÉ: write permissions
+            packages: write
         outputs:
-            version: ${{ steps.get_version.outputs.version }}  # Expose la version créée
+            version: ${{ steps.get_version.outputs.version }}
         steps:
-            # Étape 1: Génère un token d'authentification depuis une GitHub App
-            - name: Genarate App Token
-              id: get_token  # ID pour référencer les outputs de cette étape
-              uses: actions/create-github-app-token@v2  # Action officielle pour créer un token
+            - name: Generate App Token
+              id: get_token
+              uses: actions/create-github-app-token@v2
               with:
-                app-id: ${{ secrets.APP_ID }}           # ID de l'application (stocké dans les secrets)
-                private-key: ${{ secrets.PRIVATE_KEY }} # Clé privée de l'app (stockée dans les secrets)
+                app-id: ${{ secrets.APP_ID }}
+                private-key: ${{ secrets.PRIVATE_KEY }}
 
-            # Étape 2: Récupère le code source du repository
             - name: Checkout
-              uses: actions/checkout@v5.0.0  # Action officielle GitHub pour cloner le repo
+              uses: actions/checkout@v5.0.0
               with:
-                token: ${{ steps.get_token.outputs.token }}  # Utilise le token de l'app (plus de permissions)
-                fetch-depth: 0  # Récupère tout l'historique Git (nécessaire pour semantic-release)
+                token: ${{ steps.get_token.outputs.token }}
+                fetch-depth: 0
 
-            # Étape 2b: Force le checkout de la branche (évite detached HEAD)
             - name: Checkout branch
               run: |
                 BRANCH_NAME="${GITHUB_REF#refs/heads/}"
                 echo "Checking out branch: $BRANCH_NAME"
                 git checkout "$BRANCH_NAME"
 
-            # Étape 3: Installe uv (gestionnaire de paquets Python)
             - name: astral-sh/setup-uv
               uses: astral-sh/setup-uv@v7.1.2
               with:
-                version: "latest"  # Utilise la dernière version stable
+                version: "latest"
 
-            # Étape 4: Installe Python Semantic Release comme outil
             - name: Install Python Semantic Release
-              run: |
-                # uv tool install : Installe un outil Python en isolation
-                # python-semantic-release : Outil pour versionning sémantique automatique
-                uv tool install python-semantic-release
+              run: uv tool install python-semantic-release
 
-            # Étape 5: Génère une nouvelle version et publie la release
             - name: Semantic Versioning
               id: semantic
               env:
-                # Token nécessaire pour créer des releases sur GitHub
                 GITHUB_TOKEN: ${{ steps.get_token.outputs.token }}
                 GH_TOKEN: ${{ steps.get_token.outputs.token }}
               run: |
-                # Configure l'identité Git pour les commits automatiques
                 git config user.name "berryWIP-bot[bot]"
                 git config user.email "berryWIP-bot[bot]@users.noreply.github.com"
 
-                # uv run : Exécute la commande dans l'environnement de l'outil installé
-                # version --changelog : Détermine la nouvelle version et met à jour le changelog
                 uv run semantic-release version --changelog
 
-                # publish : Crée le tag Git et la release GitHub (uniquement sur main)
                 if [ "${{ github.ref }}" == "refs/heads/main" ]; then
                   echo "📦 Creating GitHub Release (main branch)"
                   uv run semantic-release publish
                 else
                   echo "⏭️ Skipping GitHub Release (develop branch - pre-release only)"
-                  # Sur develop, on push juste le tag Git sans créer de GitHub Release
                   git push --follow-tags origin HEAD
                 fi
 
-            # Étape 6: Récupère la version créée pour l'exposer aux autres jobs
             - name: Get Version
               id: get_version
               run: |
-                # Récupère le dernier tag Git (qui correspond à la version créée)
                 VERSION=$(git describe --tags --abbrev=0)
-                # Exporte la version dans les outputs du job
                 echo "version=$VERSION" >> $GITHUB_OUTPUT
 
-    # Job pour construire et publier l'image Docker
     build-and-push-docker:
         name: Build & Push Docker Image
-        runs-on: ubuntu-latest          # Utilise la dernière version d'Ubuntu
-        needs: release                  # Ce job attend que le job 'release' soit terminé
-        if: github.ref == 'refs/heads/main'  # Uniquement sur main (pas de Docker image pour develop)
+        runs-on: ubuntu-latest
+        needs: release
+        if: github.ref == 'refs/heads/main'
         permissions:
-            contents: read      # Lecture du contenu du repository
-            packages: write     # Écriture dans le registry GitHub Container Registry
+            contents: read
+            packages: write
         steps:
-            # Étape 1: Récupère le code source pour construire l'image
             - name: Checkout
               uses: actions/checkout@v5.0.0
               with:
-                fetch-depth: 0  # Récupère tout l'historique Git
+                fetch-depth: 0
 
-            # Étape 2: Authentification au GitHub Container Registry
             - name: Login to Docker Hub
-              uses: docker/login-action@v3.6.0  # Action officielle Docker pour se connecter
+              uses: docker/login-action@v3.6.0
               with:
-                registry: ghcr.io                          # GitHub Container Registry
-                username: ${{ github.actor }}              # Nom d'utilisateur GitHub qui exécute le workflow
-                password: ${{ secrets.GITHUB_TOKEN }}      # Token GitHub automatique (créé par GitHub Actions)
+                registry: ghcr.io
+                username: ${{ github.actor }}
+                password: ${{ secrets.GITHUB_TOKEN }}
 
             - name: Extract metadata
               id: meta
@@ -138,7 +110,7 @@ jobs:
                   org.opencontainers.image.version=${{ needs.release.outputs.version }}
                   org.opencontainers.image.revision=${{ github.sha }}
 
-            - name: Build Docker image (ne pas pousser)
+            - name: Build Docker image
               id: docker_build
               uses: docker/build-push-action@v5
               with:
@@ -158,7 +130,7 @@ jobs:
                 ignore-unfixed: true
                 severity: "CRITICAL,HIGH"
 
-            - name: Pousser l'image Docker (si le scan a réussi)
+            - name: Pousser l'image Docker
               uses: docker/build-push-action@v5
               with:
                 context: .
