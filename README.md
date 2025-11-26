@@ -5,8 +5,6 @@ A REMPLIR
 
 Application backend **FastAPI** avec **PostgreSQL** et **Docker**, intégrant un workflow **CI/CD GitHub Actions** pour build et push d’images Docker.
 
-
-
 ---
 
 ## 🚀 Stack Technique
