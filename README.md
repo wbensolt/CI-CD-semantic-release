@@ -17,7 +17,6 @@ Application backend **FastAPI** avec **PostgreSQL** et **Docker**, intégrant un
 ---
 
 
-
 ## 📦 Architecture
 
 | Service | Port | Description |
