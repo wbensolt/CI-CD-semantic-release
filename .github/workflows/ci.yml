@@ -142,7 +142,8 @@ jobs:
             uv run semantic-release publish
           else
             echo "⏭️ Skipping GitHub Release (develop branch - pre-release only)"
-            git push --follow-tags origin HEAD
+            # Push seulement les tags (pas le commit, puisque develop est protégée)
+            git push origin "$(git describe --tags --abbrev=0)"
           fi
 
       - name: Get Version
