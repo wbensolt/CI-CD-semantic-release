@@ -2,6 +2,14 @@
 
 <!-- version list -->
 
+## v1.3.0 (2025-11-27)
+
+### Features
+
+- Release
+  ([`2f26cc6`](https://github.com/wbensolt/CI-CD-semantic-release/commit/2f26cc68060e989efa3b2035041cf17e8dc23b92))
+
+
 ## v1.0.0-rc.1 (2025-11-26)
 
 - Initial Release
