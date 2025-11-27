@@ -11,7 +11,8 @@ on:
 
 # Permissions par défaut pour tous les jobs du workflow
 permissions:
-    contents: read      # Lecture du contenu du repository
+    id-token: write
+    contents: write      # Lecture du contenu du repository
     packages: write     # Écriture des packages (pour Docker registry)
     pull-requests: write
 
