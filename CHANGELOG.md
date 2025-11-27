@@ -2,6 +2,14 @@
 
 <!-- version list -->
 
+## v1.0.8 (2025-11-27)
+
+### Bug Fixes
+
+- Release
+  ([`900d50c`](https://github.com/wbensolt/ci-cd-semantic-release/commit/900d50c08fe519a77a76a2e572fc2d88f34b0454))
+
+
 ## v1.0.7 (2025-11-27)
 
 ### Bug Fixes
