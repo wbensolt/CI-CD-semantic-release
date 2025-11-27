@@ -3,6 +3,8 @@ name: CI/CD Pipeline
 on:
   push:
     branches: [main, develop]
+  pull_request:
+    branches: [main, develop]
 
 permissions:
   contents: write
@@ -28,7 +30,7 @@ jobs:
   checks:
     name: Lint / Typecheck / Security / Tests
     runs-on: ubuntu-latest
-    needs: precommit       # dépend de la réussite des pre-commit
+    needs: precommit
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -48,7 +50,7 @@ jobs:
         run: |
           uv run bandit -r app/ || true
           uv run safety check || true
-      - name: Set test database URL (SQLite in-memory)
+      - name: Set test database URL
         run: echo "DATABASE_URL=sqlite:///:memory:" >> $GITHUB_ENV
       - name: Run tests with coverage
         run: uv run pytest --cov=app --cov-report=term --cov-report=xml --cov-fail-under=60 tests/
@@ -56,7 +58,8 @@ jobs:
   release:
     name: Semantic Release
     runs-on: ubuntu-latest
-    needs: checks         # ne se déclenche que si le job 'checks' passe
+    needs: checks
+    if: github.event_name == 'push'   # <-- Exécute seulement sur push, pas sur PR
     steps:
       - name: Generate App Token
         id: get_token
@@ -102,8 +105,8 @@ jobs:
   docker:
     name: Build & Push Docker
     runs-on: ubuntu-latest
-    needs: release       # dépend de la release
-    if: github.ref == 'refs/heads/main'
+    needs: release
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'  # <-- Push sur main uniquement
     steps:
       - name: Checkout
         uses: actions/checkout@v5
