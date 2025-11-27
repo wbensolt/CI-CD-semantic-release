@@ -2,6 +2,14 @@
 
 <!-- version list -->
 
+## v1.0.7 (2025-11-27)
+
+### Bug Fixes
+
+- Release pipelineOut
+  ([`b2a9e99`](https://github.com/wbensolt/ci-cd-semantic-release/commit/b2a9e99364ca40259db768f8bb9bdf4f49b980b6))
+
+
 ## v1.0.6 (2025-11-27)
 
 ### Bug Fixes
