@@ -135,15 +135,16 @@ jobs:
           git config user.name "ci-bot[bot]"
           git config user.email "ci-bot[bot]@users.noreply.github.com"
 
-          uv run semantic-release version --changelog
-
           if [ "${{ github.ref }}" == "refs/heads/main" ]; then
             echo "📦 Creating GitHub Release (main branch)"
+            uv run semantic-release version --changelog
             uv run semantic-release publish
           else
-            echo "⏭️ Skipping GitHub Release (develop branch - pre-release only)"
-            # Push seulement les tags (pas le commit, puisque develop est protégée)
-            git push origin "$(git describe --tags --abbrev=0)"
+            echo "⏭️ Pre-release on develop (tags only)"
+            # Sur develop, crée juste le tag sans pusher (branche protégée)
+            uv run semantic-release version --changelog --no-commit --no-push
+            # Push seulement les tags créés
+            git push origin --tags || echo "Tags already exist"
           fi
 
       - name: Get Version
