@@ -1,6 +1,6 @@
 [project]
 name = "training-ci-cd-semantic-release"
-version = "1.0.0"
+version = "0.1.0"
 description = "CRUD API with PostgreSQL for managing items"
 requires-python = ">=3.13"
 
@@ -79,6 +79,16 @@ python_functions = "test_*"
 # Version actuelle du projet (sera mise à jour automatiquement)
 version_toml = ["pyproject.toml:project.version"]
 major_on_zero = true
+
+# Format des tags Git créés (ex: v1.2.3)
+tag_format = "v{version}"
+
+
+# Template du message de commit pour le bump de version
+commit_message = "chore(release): bump version to {version}"
+
+# Génère automatiquement un CHANGELOG.md
+build_command = "echo 'No build command needed'"
 # =============================================================================
 # SEMANTIC RELEASE - CONFIGURATION DES BRANCHES
 # =============================================================================
@@ -93,17 +103,11 @@ prerelease = false                # false = versions stables (1.0.0, 1.1.0, 2.0.
 # BRANCHE DEVELOP - Versions de pré-release (RC = Release Candidate)
 [tool.semantic_release.branches.develop]
 match = "develop"                 # Nom de la branche à matcher
-prerelease = true
 
 
-# Format des tags Git créés (ex: v1.2.3)
-#tag_format = "v{version}"
 
-# Template du message de commit pour le bump de version
-#commit_message = "chore(release): bump version to {version}"
 
-# Génère automatiquement un CHANGELOG.md
-#build_command = "echo 'No build command needed'"
+
 
 # Configuration du changelog
 [tool.semantic_release.changelog]
