@@ -68,7 +68,7 @@ jobs:
 
           if [ "${{ github.ref }}" == "refs/heads/main" ]; then
             echo "📦 Creating GitHub Release (main branch)"
-            uv run semantic-release publish
+            uv run semantic-release publish -vv
           else
             echo "⏭️ Skipping GitHub Release (develop branch - pre-release only)"
             git push --follow-tags origin HEAD
